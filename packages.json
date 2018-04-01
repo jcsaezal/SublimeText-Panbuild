@@ -1,0 +1,29 @@
+{
+  "schema_version": "2.0",
+  "packages": [
+    {
+      "name": "Panbuild",
+      "details": "https://github.com/jcsaezal/SublimeText-Panbuild",
+      "labels": [
+        "pandoc",
+        "markdown",
+        "pandoc markdown",
+        "html",
+        "markup",
+        "text manipulation",
+        "latex",
+        "epub"
+      ],
+      "releases": [
+        {
+          "sublime_text": "<3000",
+          "details": "https://github.com/jcsaezal/SublimeText-Panbuild/tree/master"
+        },
+        {
+          "sublime_text": ">=3000",
+          "details": "https://github.com/jcsaezal/SublimeText-Panbuild/tree/master"
+        }
+      ]
+    }
+  ]
+}

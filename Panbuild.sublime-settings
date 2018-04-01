@@ -1,0 +1,13 @@
+{
+
+  // There are 2 possible top level settings keys, "user" and "default". If you
+  // use "default" in your user settings file, the default settings will be
+  // overwritten, but if you use "user" your settings will be merged into the
+  // default settings.
+  "default": {
+
+    // paths to the pandoc and panbuild executable files (null means in your PATH) 
+    "pandoc-path": null,
+    "panbuild-path": null
+  }
+}
