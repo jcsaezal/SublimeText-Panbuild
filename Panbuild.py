@@ -181,8 +181,9 @@ class PromptPanbuildCommand(sublime_plugin.WindowCommand):
     def build(self, i):
         if i == -1:
             return
-        #view = self.window.active_view()
+        view = self.window.active_view()
         self.window.run_command('show_panel', {"panel": "console"})
+        self.window.focus_view(view)
         self.build_settings.window=self.window
         version=sublime.version()
         if version[0]=='2':
