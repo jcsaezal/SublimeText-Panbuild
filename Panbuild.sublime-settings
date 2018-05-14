@@ -13,7 +13,6 @@
     //    "pandoc-path": "C:/Users/[username]/AppData/Local/Pandoc/pandoc.exe",
     "pandoc-path": null,
     "panbuild-path": null,
-
     "available-targets": {
       "Pandoc Markdown": {
         // additional arguments passed to pandoc

@@ -199,21 +199,88 @@ class PromptPanbuildCommand(sublime_plugin.WindowCommand):
 class PromptPanbuildTargetCommand(sublime_plugin.WindowCommand):
     
     target_info = {}
+    target_names=[]
+    dual_mode=False
 
-    def run(self):
+    def run( self, **kwargs ):
+        if "Dual" in kwargs and kwargs["Dual"]==1:
+            self.dual_mode=1
+
         if self.window.active_view():
             self.window.show_quick_panel(
                 self.get_available_targets(),
                 self.append_target)
 
+
     def get_available_targets(self):
 
-        target_names=[]
-        for target_name, settings in _s('available-targets').items():
-            target_names.append(target_name)
-            target_info[target_names]=settings
+        self.target_info = {}
+        self.target_names=[]
+
+        settings=sublime.load_settings("Panbuild.sublime-settings").get("default",None)
+
+        if not settings:
+            sublime.error_message("Settings not found")
+            return None
+
+        #print(settings)
         
-        return target_names
+        if "available-targets" in settings:
+            available_targets=settings["available-targets"]
+        else: 
+            sublime.error_message("Settings not found")
+            return []
+
+        for target_name, settings in available_targets.items():
+            self.target_names.append(target_name)
+            self.target_info[target_name]=settings
+        
+        return self.target_names
 
     def append_target(self, i):  
+        '''Add target to build.yaml file'''
+        ## Retrieve pandoc options
+        name=self.target_names[i]
+        properties=self.target_info[name]
+
+        if not "pandoc-options" in properties:
+            sublime.error_message("pandoc-options not found for target %s" % name)
+            return
+
+        if not "target-id" in properties:
+            sublime.error_message("Target id not found for target %s" % name)
+            return
+
+        pandoc_options=properties["pandoc-options"]
+        target_id=properties["target-id"]
+
+        ## Search for build.yaml
+        view = self.window.active_view()
+        fname=view.file_name()
+        fpath=os.path.abspath(fname)
+        dirname, filename=os.path.split(fpath)
+        buildfile=os.path.join(dirname, "build.yaml")
+        
+        if not os.path.isfile(buildfile):
+            ## Create a new build file 
+            if self.dual_mode:
+                cmd=["panbuild","-D","-S",filename+" "+pandoc_options,target_id]
+            else:
+                cmd=["panbuild","-S",filename+" "+pandoc_options,target_id]
+        else:  
+            cmd=["panbuild","-a",pandoc_options,target_id]
+            
+        process = subprocess.Popen(
+            cmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE, cwd=dirname)
+        result, error = process.communicate() #contents.encode('utf-8'))
+        exitcode = process.returncode
+
+        # handle pandoc errors
+        if exitcode!=0:
+            sublime.error_message('\n\n'.join([
+                'Error when running:',
+                ' '.join(cmd),
+                error.decode('utf-8').strip()]))
+            return
         return  
