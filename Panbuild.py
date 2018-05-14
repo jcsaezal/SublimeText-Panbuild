@@ -194,3 +194,25 @@ class PromptPanbuildCommand(sublime_plugin.WindowCommand):
             sublime.set_timeout_async(lambda: self.build_settings.run_panbuild(i), 1)
 
         return 
+
+class PromptPanbuildTargetCommand(sublime_plugin.WindowCommand):
+    
+    target_info = {}
+
+    def run(self):
+        if self.window.active_view():
+            self.window.show_quick_panel(
+                self.get_available_targets(),
+                self.append_target)
+
+    def get_available_targets(self):
+
+        target_names=[]
+        for target_name, settings in _s('available-targets').items():
+            target_names.append(target_name)
+            target_info[target_names]=settings
+        
+        return target_names
+
+    def append_target(self, i):  
+        return  

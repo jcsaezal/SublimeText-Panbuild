@@ -6,8 +6,60 @@
   // default settings.
   "default": {
 
-    // paths to the pandoc and panbuild executable files (null means in your PATH) 
+    // path to the pandoc binary. Default locations per platform:
+    // -  mac
+    //    "pandoc-path": "/usr/local/bin/pandoc",
+    // -  windows
+    //    "pandoc-path": "C:/Users/[username]/AppData/Local/Pandoc/pandoc.exe",
     "pandoc-path": null,
-    "panbuild-path": null
+    "panbuild-path": null,
+
+    "available-targets": {
+      "Pandoc Markdown": {
+        // additional arguments passed to pandoc
+        "pandoc-options": "--to=markdown --wrap=none --atx-headers",
+        "target-id": "Markdown"
+      },
+     
+     "Microsoft Word (docx)": {
+        "pandoc-options": "-t docx",
+        "target-id": "DOCX"
+     },
+
+     "PDF": {
+        "pandoc-options": "-t latex -s",
+        "target-id": "PDF"
+     },
+
+     "Beamer Slides (PDF)": {
+        "pandoc-options": "-t beamer -s",
+        "target-id": "PDF"
+      },
+
+     "LaTeX (source)": {
+        "pandoc-options": "-t latex -s -o latex-output.tex",
+        "target-id": "LATEX"
+     },
+
+     "Beamer Slides (source)": {
+        "pandoc-options": "-t latex -s -o beamer-output.tex",
+        "target-id": "BEAMER"
+     },
+
+     "Standalone HTML page": {
+        "pandoc-options": "-t html -s",
+        "target-id": "HTML"
+      },
+
+     "EPUB": {
+        "pandoc-options": "-t epub",
+        "target-id": "EPUB"
+      },      
+
+     "EPUB3": {
+        "pandoc-options": "-t epub3",
+        "target-id": "EPUB3v"
+      }  
+    }
   }
 }
