@@ -96,6 +96,7 @@ class PromptPanbuildCommand(sublime_plugin.WindowCommand):
     @see Default.sublime-commands'''
 
     options = []
+    action="build-target"
 
     def retrieve_targets(self,build_file,build_file_full,working_directory,inSource=False):
         if not os.path.isfile(build_file_full):
@@ -142,11 +143,19 @@ class PromptPanbuildCommand(sublime_plugin.WindowCommand):
 
             return (0,PanbuildSettings(targets,outfiles,commands,working_directory))
 
-    def run(self):
+    def run(self, **kwargs ):
+        if "action" in kwargs:
+            self.action=kwargs["action"]
+
+        if self.action=="remove_target":
+            action_function=self.remove_target
+        else:
+            action_function=self.build
+
         if self.window.active_view():
             self.window.show_quick_panel(
                 self.get_build_targets(),
-                self.build)
+                action_function)
 
     def get_build_targets(self):
         '''Generates a ranked list of available transformations.'''
@@ -166,6 +175,9 @@ class PromptPanbuildCommand(sublime_plugin.WindowCommand):
         if code==0: ## Buildfile was found
             print("Found build file at %s" % buildfile)
             return self.build_settings.targets
+
+        if self.action == "remove_target":
+            return []
 
         ## try to get it from there 
         (code,self.build_settings)=self.retrieve_targets(fname,fpath,dirname,inSource=True)
@@ -195,6 +207,28 @@ class PromptPanbuildCommand(sublime_plugin.WindowCommand):
             sublime.set_timeout_async(lambda: self.build_settings.run_panbuild(i), 1)
 
         return 
+
+    def remove_target(self,i):
+        if i == -1:
+            return 
+         
+        target_name=self.build_settings.targets[i]
+        cmd=["panbuild","-r",target_name]
+        
+        process = subprocess.Popen(
+          cmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+          stderr=subprocess.PIPE, cwd=self.build_settings.dirname)
+
+        result, error = process.communicate()
+        exitcode = process.returncode
+
+        # handle panbuild errors
+        if exitcode!=0:
+            sublime.error_message('\n\n'.join([
+                'Error when running:',
+                ' '.join(cmd),
+                error.decode('utf-8').strip()]))
+            return
 
 class PromptPanbuildTargetCommand(sublime_plugin.WindowCommand):
     
