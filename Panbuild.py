@@ -235,10 +235,46 @@ class PromptPanbuildTargetCommand(sublime_plugin.WindowCommand):
     target_info = {}
     target_names=[]
     dual_mode=False
+    action=None
+
+    def build_yaml_is_present(self):
+        ## Search for build.yaml
+        view = self.window.active_view()
+        fname=view.file_name()
+        fpath=os.path.abspath(fname)
+        dirname, filename=os.path.split(fpath)
+        buildfile=os.path.join(dirname, "build.yaml")
+        return (os.path.isfile(buildfile),dirname)
 
     def run( self, **kwargs ):
         if "Dual" in kwargs and kwargs["Dual"]==1:
             self.dual_mode=1
+
+        if "action" in kwargs:
+            self.action=kwargs["action"]
+
+        (build_yaml_found,dirname)=self.build_yaml_is_present()
+
+        if  self.action=="create-file":
+            ##Ask if overwriting is in order
+            if build_yaml_found:
+                if sublime.yes_no_cancel_dialog("Found existing build.yaml file.\nDo you want to overwrite it?")!=1:
+                    return
+        elif self.action=="delete-file":
+            if not build_yaml_found:
+                sublime.error_message("build.yaml was not found at %s" % dirname)
+                return
+            os.remove(os.path.join(dirname, "build.yaml"))
+            return
+        elif self.action=="open-file":
+            if not build_yaml_found: 
+                sublime.error_message("build.yaml was not found at %s" % dirname)
+                return     
+            self.window.open_file(os.path.join(dirname, "build.yaml"))
+            return            
+        else: ## Add-target...  
+            if not build_yaml_found and sublime.yes_no_cancel_dialog("build.yaml was not found at %s.\nDo you want to create it?" % dirname) !=1:
+                    return 
 
         if self.window.active_view():
             self.window.show_quick_panel(
@@ -269,6 +305,10 @@ class PromptPanbuildTargetCommand(sublime_plugin.WindowCommand):
             self.target_names.append(target_name)
             self.target_info[target_name]=settings
         
+        ## Add custom target
+        self.target_names.append("Custom target")   
+        self.target_info["Custom target"]={"target-id": "","pandoc-options":""}
+
         return self.target_names
 
     def append_target(self, i):  
@@ -287,15 +327,19 @@ class PromptPanbuildTargetCommand(sublime_plugin.WindowCommand):
 
         pandoc_options=properties["pandoc-options"]
         target_id=properties["target-id"]
+        fname=self.window.active_view().file_name()
+        fpath=os.path.abspath(fname)
+        dirpath, filename=os.path.split(fpath)
+
+        if target_id=="":
+            ##Pass your own parameters
+             sublime.error_message("TODO")
+             return 
 
         ## Search for build.yaml
-        view = self.window.active_view()
-        fname=view.file_name()
-        fpath=os.path.abspath(fname)
-        dirname, filename=os.path.split(fpath)
-        buildfile=os.path.join(dirname, "build.yaml")
-        
-        if not os.path.isfile(buildfile):
+        (build_yaml_found,dirname)=self.build_yaml_is_present()
+
+        if not build_yaml_found:
             ## Create a new build file 
             if self.dual_mode:
                 cmd=["panbuild","-D","-S",filename+" "+pandoc_options,target_id]

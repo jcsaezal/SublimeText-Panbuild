@@ -12,11 +12,26 @@
     {
         "caption": "Panbuild: Add target",
         "command": "prompt_panbuild_target",
-        "args": {"Dual": 0}        
+        "args": {"action":"add-target"}        
     } ,
     {
-        "caption": "Panbuild: Add Dual Markdown target",
+        "caption": "Panbuild: Open build file",
         "command": "prompt_panbuild_target",
-        "args": {"Dual": 1}
-    }           
+        "args": {"action":"open-file"}
+    },     
+    {
+        "caption": "Panbuild: Create build file",
+        "command": "prompt_panbuild_target",
+        "args": {"action":"create-file","Dual": 0}
+    },       
+    {
+        "caption": "Panbuild: Create build file (Dual Markdown)",
+        "command": "prompt_panbuild_target",
+        "args": {"action":"create-file","Dual": 1}
+    },
+    {
+        "caption": "Panbuild: Delete build file",
+        "command": "prompt_panbuild_target",
+        "args": {"action":"delete-file"}
+    },                  
 ]
