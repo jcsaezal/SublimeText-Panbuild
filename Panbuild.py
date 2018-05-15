@@ -32,6 +32,25 @@ import os
 import errno
 import threading
 
+def run_panbuild_command(cmd,dirname):
+    # write panbuild command to console
+    print('Running Command: '+' '.join(cmd))
+    # run command
+    process = subprocess.Popen(
+            cmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE, cwd=dirname)
+    result, error = process.communicate() #contents.encode('utf-8'))
+    exitcode = process.returncode
+
+    # handle panbuild errors
+    if exitcode!=0:
+        sublime.error_message('\n\n'.join([
+            'Error when running:',
+            ' '.join(cmd),
+            error.decode('utf-8').strip()]))
+           
+    return exitcode
+
 
 class PanbuildSettings(threading.Thread):
     def __init__(self,targets,outfiles,commands,working_directory):
@@ -54,22 +73,10 @@ class PanbuildSettings(threading.Thread):
         cmd=self.commands[active_target]
         outfile=self.outfiles[active_target]
 
-        # write panbuild command to console
-        print('Running Command: '+' '.join(cmd))
-    # run command
-        process = subprocess.Popen(
-            cmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE, cwd=self.dirname)
-        result, error = process.communicate() #contents.encode('utf-8'))
-        exitcode = process.returncode
+        exitcode=run_panbuild_command(cmd,self.dirname)
 
-        # handle pandoc errors
-        if exitcode!=0:
-            sublime.error_message('\n\n'.join([
-                'Error when running:',
-                ' '.join(cmd),
-                error.decode('utf-8').strip()]))
-            return
+        if exitcode !=0:
+            return 
 
         # if write to file, open
         if outfile is not None:
@@ -348,17 +355,8 @@ class PromptPanbuildTargetCommand(sublime_plugin.WindowCommand):
         else:  
             cmd=["panbuild","-a",pandoc_options,target_id]
             
-        process = subprocess.Popen(
-            cmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE, cwd=dirname)
-        result, error = process.communicate() #contents.encode('utf-8'))
-        exitcode = process.returncode
+        
+        exitcode=run_panbuild_command(cmd,dirname)
 
-        # handle pandoc errors
-        if exitcode!=0:
-            sublime.error_message('\n\n'.join([
-                'Error when running:',
-                ' '.join(cmd),
-                error.decode('utf-8').strip()]))
+        if exitcode !=0:
             return
-        return  
