@@ -154,7 +154,7 @@ class PromptPanbuildCommand(sublime_plugin.WindowCommand):
         if "action" in kwargs:
             self.action=kwargs["action"]
 
-        if self.action=="remove_target":
+        if self.action=="remove-target":
             action_function=self.remove_target
         else:
             action_function=self.build
