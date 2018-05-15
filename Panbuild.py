@@ -243,6 +243,8 @@ class PromptPanbuildTargetCommand(sublime_plugin.WindowCommand):
     target_names=[]
     dual_mode=False
     action=None
+    cmd=[]
+    dirname=None
 
     def build_yaml_is_present(self):
         ## Search for build.yaml
@@ -318,6 +320,15 @@ class PromptPanbuildTargetCommand(sublime_plugin.WindowCommand):
 
         return self.target_names
 
+    def invoke_panbuild_command(self):
+        return run_panbuild_command(self.cmd,self.dirname)
+
+    def create_custom_target(self,user_input):
+        lastarg=self.cmd[-1]
+        self.cmd[-1]=lastarg+user_input
+        self.cmd.append("CUSTOM")
+        return self.invoke_panbuild_command()
+
     def append_target(self, i):  
         '''Add target to build.yaml file'''
         ## Retrieve pandoc options
@@ -338,25 +349,20 @@ class PromptPanbuildTargetCommand(sublime_plugin.WindowCommand):
         fpath=os.path.abspath(fname)
         dirpath, filename=os.path.split(fpath)
 
-        if target_id=="":
-            ##Pass your own parameters
-             sublime.error_message("TODO")
-             return 
-
         ## Search for build.yaml
-        (build_yaml_found,dirname)=self.build_yaml_is_present()
+        (build_yaml_found,self.dirname)=self.build_yaml_is_present()
 
         if not build_yaml_found:
             ## Create a new build file 
             if self.dual_mode:
-                cmd=["panbuild","-D","-S",filename+" "+pandoc_options,target_id]
+                self.cmd=["panbuild","-D","-S",filename+" "+pandoc_options]
             else:
-                cmd=["panbuild","-S",filename+" "+pandoc_options,target_id]
+                self.cmd=["panbuild","-S",filename+" "+pandoc_options]
         else:  
-            cmd=["panbuild","-a",pandoc_options,target_id]
+            self.cmd=["panbuild","-a",pandoc_options]
             
-        
-        exitcode=run_panbuild_command(cmd,dirname)
-
-        if exitcode !=0:
-            return
+        if target_id!="":
+            self.cmd.append(target_id)        
+            self.invoke_panbuild_command()
+        else:
+            self.window.show_input_panel("Indicate the options to be passed to pandoc", "",self.create_custom_target, None, None)      
