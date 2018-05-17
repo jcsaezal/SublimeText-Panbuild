@@ -127,33 +127,66 @@ class PromptPanbuildCommand(sublime_plugin.WindowCommand):
         if exitcode and error:
             #print('Error when running:',join(cmd),error.decode('utf-8').strip())
             return (errno.ENOENT,None)
-        else:
-            lines=result.splitlines()
-            targets=[]
-            outfiles={}
-            commands={}
-            for line in lines:
-                tokens=line.strip().split(b':')
-                target=tokens[0].decode("utf-8")
-                
-                if len(tokens)!=2 or tokens[1].strip() == "":
-                    continue
 
-                outfile=tokens[1].strip().decode("utf-8")
+        lines=result.splitlines()
+        targets=[]
+        outfiles={}
+        commands={}
+        for line in lines:
+            tokens=line.strip().split(b':')
+            target=tokens[0].decode("utf-8")
+            
+            if len(tokens)!=2 or tokens[1].strip() == "":
+                continue
 
-                targets.append(target)
-                outfiles[target]=outfile
-                ##Create CMD
-                cool_cmd=list(basecmd)
-                cool_cmd.append(target)
-                commands[target]=cool_cmd
+            outfile=tokens[1].strip().decode("utf-8")
 
-            return (0,PanbuildSettings(targets,outfiles,commands,working_directory))
+            targets.append(target)
+            outfiles[target]=outfile
+            ##Create CMD
+            cool_cmd=list(basecmd)
+            cool_cmd.append(target)
+            commands[target]=cool_cmd
+
+        #print(self.action)
+        if self.action=="remove-target":
+            ## Filter lists...
+            f_targets=[]
+            f_outfiles={}
+            f_commands={}
+
+            prev="777"
+            for target in targets:
+                idx=target.rfind("/")
+                if idx==-1:
+                    f_target=target
+                else:    
+                    f_target=target[:idx]
+
+                ## Add if not repeated
+                if f_target!=prev:
+                    f_targets.append(f_target)
+                    f_outfiles[f_target]=outfiles[target]
+                    f_commands[f_target]=commands[target]
+
+                prev=f_target
+
+            ## Replace unfiltered data structures with filtered ones
+            targets=f_targets
+            outfiles=f_outfiles
+            commands=f_commands
+
+            print(targets)
+
+        return (0,PanbuildSettings(targets,outfiles,commands,working_directory))
 
     def run(self, **kwargs ):
         if "action" in kwargs:
             self.action=kwargs["action"]
+        else:
+            self.action="build-target"
 
+        print(self.action)
         if self.action=="remove-target":
             action_function=self.remove_target
         else:
@@ -183,7 +216,7 @@ class PromptPanbuildCommand(sublime_plugin.WindowCommand):
             print("Found build file at %s" % buildfile)
             return self.build_settings.targets
 
-        if self.action == "remove_target":
+        if self.action == "remove-target":
             return []
 
         ## try to get it from there 
@@ -352,13 +385,13 @@ class PromptPanbuildTargetCommand(sublime_plugin.WindowCommand):
         ## Search for build.yaml
         (build_yaml_found,self.dirname)=self.build_yaml_is_present()
 
-        if not build_yaml_found:
-            ## Create a new build file 
+        if self.action=="create-file":
+            ## Create a new build file overwriting it if necessary
             if self.dual_mode:
                 self.cmd=["panbuild","-D","-S",filename+" "+pandoc_options]
             else:
                 self.cmd=["panbuild","-S",filename+" "+pandoc_options]
-        else:  
+        elif self.action=="add-target":
             self.cmd=["panbuild","-a",pandoc_options]
             
         if target_id!="":
