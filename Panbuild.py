@@ -104,6 +104,7 @@ class PromptPanbuildCommand(sublime_plugin.WindowCommand):
 
     options = []
     action="build-target"
+    build_settings=None
 
     def retrieve_targets(self,build_file,build_file_full,working_directory,inSource=False):
         if not os.path.isfile(build_file_full):
@@ -185,6 +186,8 @@ class PromptPanbuildCommand(sublime_plugin.WindowCommand):
             self.action=kwargs["action"]
         else:
             self.action="build-target"
+
+        self.build_settings=None
 
         print(self.action)
         if self.action=="remove-target":
@@ -313,7 +316,15 @@ class PromptPanbuildTargetCommand(sublime_plugin.WindowCommand):
                 sublime.error_message("build.yaml was not found at %s" % dirname)
                 return     
             self.window.open_file(os.path.join(dirname, "build.yaml"))
-            return            
+            return 
+        elif self.action=="clean":
+            if not build_yaml_found:
+                sublime.error_message("build.yaml was not found at %s" % dirname)
+                return
+            self.cmd=["panbuild","clean"]
+            self.dirname=dirname
+            self.invoke_panbuild_command()     
+            return               
         else: ## Add-target...  
             if not build_yaml_found and sublime.yes_no_cancel_dialog("build.yaml was not found at %s.\nDo you want to create it?" % dirname) !=1:
                     return 

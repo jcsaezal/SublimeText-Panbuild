@@ -15,6 +15,11 @@
         "args": {"action":"add-target"}        
     } ,
     {
+        "caption": "Panbuild: Clean",
+        "command": "prompt_panbuild_target",
+        "args": {"action":"clean"}        
+    } ,
+    {
         "caption": "Panbuild: Open build file",
         "command": "prompt_panbuild_target",
         "args": {"action":"open-file"}
